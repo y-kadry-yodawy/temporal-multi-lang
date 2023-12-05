@@ -1,11 +1,12 @@
 package org.example;
 
 import io.temporal.client.WorkflowClient;
-import io.temporal.client.WorkflowOptions;
 import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
+import io.temporal.worker.Worker;
+import io.temporal.worker.WorkerFactory;
 
-public class Main {
+public class SayHelloWorker {
 
     public static void main(String[] args) {
 
@@ -18,14 +19,14 @@ public class Main {
 
         // Configure the Temporal client
         WorkflowClient workflowClient = WorkflowClient.newInstance(service);
+        // Create a WorkerFactory
+        WorkerFactory workerFactory = WorkerFactory.newInstance(workflowClient);
+        // Create a Worker for the "hello-task-queue"
+        Worker worker = workerFactory.newWorker("java-task-queue");
+        // Register the workflow implementation
+        worker.registerWorkflowImplementationTypes(SayHelloImpl.class);
 
-        // Create WorkflowOptions with desired settings
-        WorkflowOptions options = WorkflowOptions.newBuilder().setTaskQueue("java-task-queue").build();
-
-        // Create a workflow stub
-        SayHello sayHelloWorkflow = workflowClient.newWorkflowStub(SayHello.class, options);
-
-        // Print the result
-        System.out.println("Workflow result: " + sayHelloWorkflow.run("Youssef"));
+        // Start the worker
+        workerFactory.start();
     }
 }
